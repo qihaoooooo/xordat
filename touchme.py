@@ -3,17 +3,6 @@ import json
 import time
 import playsound
 
-# def filterWords(target):
-    # wordswelike = ['Player', 'Mod']
-
-    # if(target in wordswelike):
-        # return True
-    # else:
-        # return False
-
-# def splitResourceName(str):
-  # return ' '.join(filter(filterWords,re.split('([A-Z]?[^A-Z]*)',str)))
-
 storedAlerts = []
 json_data = open('touchme.json', encoding='utf8')
 desiredRewards = json.load(json_data)
