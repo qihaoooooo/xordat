@@ -1,8 +1,8 @@
 import json
 import re
 import requests
-from pprint import pprint as pp
 from flask import Flask, request
+import command
 
 #
 #   API
@@ -15,8 +15,6 @@ def get_url(method):
 # sends a message
 def send_message(chat_id, text, reply_to_message_id=None):
 
-    print("Sending message")
-
     url = get_url("sendMessage")
 
     # build Message JSON object
@@ -27,38 +25,41 @@ def send_message(chat_id, text, reply_to_message_id=None):
     if reply_to_message_id is not None:
         data["reply_to_message_id"] = reply_to_message_id
 
-    r = requests.post(url, data=data)
-    pp(r.json())
-    pp(data)
+    requests.post(url, data=data)
+
+#
 #   Logic
 #
 
 # regex patterns
-item_regex = re.compile(r"(\[[a-zA-Z]+(?: [a-zA-Z]+)*\])+")
+item_regex = re.compile(r"((?<=\[)[a-zA-Z]+(?: [a-zA-Z]+)*(?=\]))+")
+cmd_regex = re.compile(r"(?<=^/)([a-zA-Z_]*?)(?:@padordis)?$")
 
 def handle_message(update):
 
-    print("Received message")
-
-    # properties of update
     message = update["message"]
-    chat_id = message["chat"]["id"]
 
-    if "text" in message:
-        text = message["text"]
-    else:
+    if "text" not in message:
         # ignore non-text messages
         return
 
-    print(chat_id)
-    print(text)
+    # identifier for message
+    message_id = message["message_id"]
+    # message text
+    text = message["text"]
+    # identifier for chat group message was sent in
+    chat_id = message["chat"]["id"]
+
+    if cmd_regex.search(text):
+        command.process(text)
 
     if item_regex.search(text):
         # message contains query of item(s)
         item_list = item_regex.findall(text)
 
-        test_str = ', '.join(item_list)
-        send_message(chat_id, test_str)
+        # temporary code just for echoing
+        for item in item_list:
+            send_message(chat_id=chat_id, text=item, reply_to_message_id=message_id)
 
 #
 #   Server
@@ -73,8 +74,6 @@ app = Flask(__name__)
 # route for handling updates from Telegram API
 @app.route("/{}".format(tokens["telegram-bot-key"]), methods=["POST"])
 def handle_update():
-
-    print("Received update")
 
     update = request.get_json()
     if "message" in update:
