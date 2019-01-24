@@ -17,3 +17,7 @@ def parse(cmdlist, response):
     elif cmd == "goodbot":
         response.set_text(":^)")
         response.send()
+
+    elif cmd == "badbot":
+        response.set_text(":'(")
+        response.send()
